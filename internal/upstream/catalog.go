@@ -136,6 +136,7 @@ var ModelAliases = map[string]string{
 	"claude-sonnet-4": "smodel", "claude-sonnet-4-5": "smodel", "claude-sonnet-4-6": "smodel", "claude-3-7-sonnet": "smodel",
 	"claude-opus-4": "cmodel", "claude-opus-4-5": "cmodel", "claude-opus-4-6": "cmodel",
 	// Qwen
+	"qwen4-max": "qmodel_38max", "qwen4-max-preview": "qmodel_38max", "qwen4": "qmodel_38max",
 	"qwen3.8-max": "qmodel_38max", "qwen3.8-max-preview": "qmodel_38max", "qmodel_preview": "qmodel_38max",
 	"qwen3.8-flash": "qfmodel",
 	"qwen3.7-max":   "qmodel_latest",

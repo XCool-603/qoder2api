@@ -58,7 +58,8 @@
     "gpt-4o": "smodel",
     "claude-sonnet": "smodel",
     "claude-3-7-sonnet": "smodel",
-    "deepseek-chat": "cn:glm-5.2"
+    "deepseek-chat": "cn:glm-5.2",
+    "qwen4-max-preview": "qmodel_38max"
   },
   "free_models": [
     "auto-free",
