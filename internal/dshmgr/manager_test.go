@@ -74,10 +74,12 @@ func TestUnzipAndResolve(t *testing.T) {
 	if !ok {
 		t.Fatalf("resolveNodeNpx 失败: node=%s, npx=%s", nodePath, npxPath)
 	}
-	if filepath.Base(nodePath) != "node.exe" {
-		t.Errorf("期望 node.exe, 实际: %s", nodePath)
+	baseNode := filepath.Base(nodePath)
+	if baseNode != "node.exe" && baseNode != "node" {
+		t.Errorf("期望 node.exe 或 node, 实际: %s", nodePath)
 	}
-	if filepath.Base(npxPath) != "npx.cmd" && filepath.Base(npxPath) != "npx" {
+	baseNpx := filepath.Base(npxPath)
+	if baseNpx != "npx.cmd" && baseNpx != "npx" {
 		t.Errorf("期望 npx.cmd 或 npx, 实际: %s", npxPath)
 	}
 }
