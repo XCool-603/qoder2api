@@ -372,9 +372,9 @@
               </div>
             </div>
 
-            <button onclick="runBatchWelfare()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/35 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" title="一键领取所有账号的新手大礼包、活动补偿、签到并联动派猫与后台活动">
+            <button onclick="runBatchWelfare()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/35 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" title="一键全量执行：Qoder 官方活动签到、Pro升级试用申领与全池额度同步">
               <span>🎁</span>
-              <span>一键吃满福利</span>
+              <span>一键申领福利</span>
             </button>
 
             <div class="relative">
@@ -384,20 +384,20 @@
               </button>
               <div id="poolWelfareDropdown" class="absolute right-0 mt-1.5 w-48 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 hidden z-50 text-xs">
                 <button onclick="runBatchTravel(); closeAllToolbarMenus();" class="w-full text-left px-3 py-2 rounded-xl text-pink-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
-                  <span>🐱</span><span>一键派猫猫旅行</span>
+                  <span>🔍</span><span>全池巡检与额度同步</span>
                 </button>
                 <button onclick="runBatchTasks(); closeAllToolbarMenus();" class="w-full text-left px-3 py-2 rounded-xl text-cyan-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
-                  <span>⚡</span><span>最新活动成长任务</span>
+                  <span>💎</span><span>官方活动福利一键申领</span>
                 </button>
                 <button onclick="runBatchSignin(); closeAllToolbarMenus();" class="w-full text-left px-3 py-2 rounded-xl text-indigo-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
-                  <span>✅</span><span>日常签到</span>
+                  <span>✅</span><span>日常活动签到</span>
                 </button>
                 <button onclick="runBatchTrial(); closeAllToolbarMenus();" class="w-full text-left px-3 py-2 rounded-xl text-teal-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
-                  <span>🎟️</span><span>领取试用包</span>
+                  <span>🎟️</span><span>申领 Pro 升级试用</span>
                 </button>
                 <div class="h-px bg-slate-800 my-1"></div>
                 <button onclick="openInviteModal(); closeAllToolbarMenus();" class="w-full text-left px-3 py-2 rounded-xl text-purple-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer">
-                  <span>🔗</span><span>邀请新号指南</span>
+                  <span>💡</span><span>Qoder 官方权益指南</span>
                 </button>
               </div>
             </div>
@@ -1346,112 +1346,73 @@ eyJhbGciOi...----refresh_token_here'></textarea>
     </div>
   </div>
 
-  <!-- Invite & Welfare Guide Modal -->
+  <!-- Qoder Official Campaigns & Benefits Guide Modal -->
   <div id="inviteModal" onclick="if(event.target===this) closeInviteModal()" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
     <div class="glass-panel border border-purple-500/30 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative overflow-hidden">
       <div class="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span class="text-lg">🔗</span>
-          <span>专属邀请中心 · 注册新号吃满新手福利</span>
+          <span class="text-lg">💡</span>
+          <span>Qoder 官方权益与自动化能力指南</span>
         </h3>
         <button onclick="closeInviteModal()" class="relative z-10 p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer" title="关闭 (Esc)">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
-      <div class="py-4 space-y-4 max-h-[78vh] overflow-y-auto pr-1">
-        <!-- 推荐人账号选择 -->
-        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
-          <label class="text-xs text-slate-400 font-medium flex items-center justify-between">
-            <span>选择作为推荐人的老账号:</span>
-            <span class="text-[11px] text-purple-400">切换账号即时更新专属链接</span>
-          </label>
-          <select id="inviteAccountSelect" onchange="onInviteAccountChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-purple-500">
-          </select>
+      <div class="py-4 space-y-4 max-h-[78vh] overflow-y-auto pr-1 text-xs">
+        <!-- 自动熔断与自动切换说明 -->
+        <div class="p-4 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-purple-950/30 border border-indigo-500/30 rounded-2xl space-y-2">
+          <div class="flex items-center gap-2 text-indigo-300 font-bold text-sm">
+            <span>🛡️ 自动熔断与无感账号轮转</span>
+          </div>
+          <p class="text-slate-300 leading-relaxed text-[11px]">
+            网关内置生产级断路器（Circuit Breaker）与多因子调度算法。当某个账号发生异常（如连续失败达阈值、429 限频、403 WAF 阻断或额度耗尽）时，系统会自动对该账号进行降权冷却或熔断隔离，并在当前请求中<strong>自动无缝切换至账号池中的下一个健康账号重试（默认最大轮转 8 次）</strong>，下游客户端无感知！
+          </p>
         </div>
 
-        <!-- 专属邀请码与专属链接展示 -->
-        <div class="p-4 bg-gradient-to-br from-purple-950/40 via-slate-900 to-indigo-950/30 border border-purple-500/30 rounded-2xl space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <span class="text-[11px] uppercase tracking-wider text-purple-300 font-semibold">该账号专属邀请码:</span>
-              <div id="inviteCodeDisplay" class="font-mono text-base font-bold text-amber-300 mt-0.5 tracking-wide">-</div>
-            </div>
-            <button onclick="copyCurrentInviteCode()" class="px-3 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 hover:text-white border border-purple-500/40 rounded-xl text-xs font-medium transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              <span>复制邀请码</span>
-            </button>
+        <!-- 自动签到与自动任务说明 -->
+        <div class="p-4 bg-gradient-to-br from-amber-950/30 via-slate-900 to-emerald-950/30 border border-amber-500/30 rounded-2xl space-y-2">
+          <div class="flex items-center gap-2 text-amber-300 font-bold text-sm">
+            <span>⏰ 北京时间 (CST) 自动化排程任务</span>
           </div>
-
-          <div class="pt-2 border-t border-purple-500/20">
-            <span class="text-[11px] uppercase tracking-wider text-purple-300 font-semibold">专属邀请注册链接:</span>
-            <div class="mt-1 flex items-center gap-2">
-              <input id="inviteUrlDisplay" readonly class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono select-all focus:outline-none">
-              <button onclick="copyCurrentInviteUrl()" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow transition shrink-0 flex items-center gap-1.5 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                <span>一键复制链接</span>
-              </button>
-            </div>
-          </div>
+          <ul class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
+            <li class="flex items-start gap-1.5">
+              <span class="text-amber-400 font-bold">1. 每日活动自动签到 (10:00 / 22:00)：</span>
+              <span>遍历账号池全量账号，拉取 Qoder 官方 <code>/sash/api/v1/me/campaigns</code> 活动并自动领取积分奖励；遇到 401 自动刷新 Token 重试。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-emerald-400 font-bold">2. 自动申领 Pro 升级试用 (11:00)：</span>
+              <span>自动探测官方 Pro 资格接口，一旦开放新账号试用或活动升级包立即自动领取入库。</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-sky-400 font-bold">3. 自动低峰静默保活 (04:00 / 16:00)：</span>
+              <span>在业务低谷期自动调用 <code>/api/v1/deviceToken/refresh</code> 刷新即将失效的会话凭证，保障全天稳定可用。</span>
+            </li>
+          </ul>
         </div>
 
-        <!-- 注册新号吃满新手福利指引 -->
-        <div class="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-          <div class="flex items-center gap-2 text-amber-300 text-xs font-bold">
-            <span>💡 2-3 个新账号「吃满新手福利」四步秘籍</span>
+        <!-- 国内版与国际版选型建议 -->
+        <div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
+          <div class="flex items-center gap-2 text-slate-200 font-bold">
+            <span>🌐 国内版 (CN) 与 国际版 (Global) 选型须知</span>
           </div>
-          <div class="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
-            <div class="flex items-start gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-              <span>点击上方按钮复制老账号的<strong>专属邀请注册链接</strong>。</span>
-            </div>
-            <div class="flex items-start gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <span>在浏览器中打开<strong>隐私/无痕窗口</strong>（避免老号 cookie 干扰），粘贴链接注册 2-3 个新账号，老号和新号双向均可获赠官方邀请奖励！</span>
-            </div>
-            <div class="flex items-start gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-              <span>新号注册完成后，在控制台点击【授权国内版/国际版】或【一键批量导入】将新凭证导入账号池。</span>
-            </div>
-            <div class="flex items-start gap-1.5">
-              <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">4</span>
-              <span>点击操作栏的【🎁 一键吃满新手福利】按钮，系统立即自动领取新手大礼包（+66 积分）、签到算力与活动补偿，秒到账！</span>
-            </div>
+          <div class="text-[11px] text-slate-400 space-y-2 leading-relaxed">
+            <p>
+              • <strong>国内版 (qoder.com.cn / 通义灵码)</strong>：面向国内个人开发者免费，开箱即自带免费额度，适合长期免费使用 <code>Qwen3.8-Flash</code>、<code>GLM-5.2</code> 等模型。
+            </p>
+            <p>
+              • <strong>国际版 (qoder.com)</strong>：采用海外商业订阅模式，提供 Claude 3.7 Sonnet (<code>sonus</code>)、Claude Opus (<code>cantus</code>) 等旗舰算力。账号需具备有效 Pro 订阅或试用额度方可调用。
+            </p>
           </div>
-        </div>
-
-        <!-- 补绑邀请人 -->
-        <div class="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-300 font-semibold">🔗 新账号补绑推荐人 (受邀绑定)</span>
-            <span class="text-[10px] text-slate-500">已直接注册的新号可在此补填老号邀请码</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div>
-              <label class="text-[11px] text-slate-400">选择待绑定的新账号:</label>
-              <select id="bindTargetAccountSelect" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-purple-500">
-              </select>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400">老号邀请码:</label>
-              <div class="flex gap-1.5 mt-1">
-                <input id="bindInviteCodeInput" type="text" placeholder="输入推荐人邀请码" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-purple-500">
-                <button onclick="submitBindInvite()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition">
-                  绑定
-                </button>
-              </div>
-            </div>
-          </div>
-          <div id="bindInviteMsg" class="text-xs font-mono hidden pt-1"></div>
         </div>
       </div>
 
       <div class="pt-3 border-t border-slate-800 flex items-center justify-end">
         <button onclick="closeInviteModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-xl transition cursor-pointer">
-          关闭
+          我知道了
         </button>
       </div>
     </div>
@@ -1859,9 +1820,9 @@ eyJhbGciOi...----refresh_token_here'></textarea>
 
 
       menu.innerHTML = `
-        <button onclick="runSingleWelfare('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-amber-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>🎁</span><span>领取新手福利</span></button>
-        <button onclick="runSingleTasks('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-cyan-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>⚡</span><span>执行成长任务</span></button>
-        <button onclick="runSingleTravel('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-pink-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>🐱</span><span>领养/派猫旅行</span></button>
+        <button onclick="runSingleWelfare('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-amber-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>🎁</span><span>全量领取福利</span></button>
+        <button onclick="runSingleTasks('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-cyan-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>💎</span><span>申领活动福利</span></button>
+        <button onclick="runSingleTravel('${a.uid}'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-pink-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>🔍</span><span>巡检与同步额度</span></button>
         <div class="h-px bg-slate-800 my-1"></div>
         ${isRevivable ? `<button onclick="controlAccount('${a.uid}', 'revive'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-amber-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>💫</span><span>复活账号</span></button>` : ''}
         ${isCooling ? `<button onclick="controlAccount('${a.uid}', 'clear_cooling'); closeRowActionMenu();" class="w-full text-left px-3 py-1.5 rounded-xl text-amber-300 hover:bg-slate-800 transition flex items-center gap-2 cursor-pointer"><span>❄️</span><span>解除冷却</span></button>` : ''}
@@ -3236,7 +3197,7 @@ window.cachedAccounts = data.accounts || [];
       let origText = '';
       if (btn) {
         origText = btn.innerHTML;
-        btn.innerHTML = '<span>⏳</span><span>正在巡检派猫中...</span>';
+        btn.innerHTML = '<span>⏳</span><span>正在全池巡检同步中...</span>';
         btn.disabled = true;
       }
       try {
@@ -3250,7 +3211,7 @@ window.cachedAccounts = data.accounts || [];
         document.getElementById('welfareModal').classList.remove('hidden');
         refreshData();
       } catch (err) {
-        alert('派猫猫旅行失败: ' + err.message);
+        alert('巡检同步失败: ' + err.message);
       } finally {
         if (btn) {
           btn.innerHTML = origText;
@@ -3271,7 +3232,7 @@ window.cachedAccounts = data.accounts || [];
         document.getElementById('welfareModal').classList.remove('hidden');
         refreshData();
       } catch (err) {
-        alert('派猫猫失败: ' + err.message);
+        alert('巡检同步失败: ' + err.message);
       }
     }
 
