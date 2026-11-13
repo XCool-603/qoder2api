@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: ['main', 'master']
+  pull_request:
+    branches: ['main', 'master']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Verify tidy dependencies & vet
+        run: |
+          go vet ./...
+
+      - name: Run full test suite
+        run: |
+          go test -race -v ./...
+
+      - name: Cross-compile server binary
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o qoder2api ./cmd/server

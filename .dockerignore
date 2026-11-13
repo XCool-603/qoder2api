@@ -1,0 +1,8 @@
+.git/
+.research/
+auths/
+data/
+config.json
+*.exe
+*.log
+.env

@@ -1,0 +1,95 @@
+{
+  "listen": ":7865",
+  "api_key": "sk-qoder2api",
+  "web_password": "",
+  "ip_whitelist_enabled": false,
+  "allowed_ips": [],
+  "allow_localhost": true,
+  "allow_remote_admin": false,
+  "auth_dir": "./auths",
+  "state_file": "./data/state.json",
+  "cooldown": {
+    "soft_rate": "3m",
+    "soft_rate_max": "2h"
+  },
+  "schedule": {
+    "checkin_hours": [10, 22],
+    "keepalive_hours": [4, 16],
+    "pro_benefit_hours": [11],
+    "checkin_enabled": true,
+    "keepalive_enabled": true,
+    "pro_benefit_enabled": true
+  },
+  "admin": {
+    "enabled": true
+  },
+  "global": {
+    "enabled": true,
+    "api_base_cn": "",
+    "api_base_global": "",
+    "openapi_cn": "",
+    "openapi_global": "",
+    "website_cn": "",
+    "website_global": "",
+    "vpc": ""
+  },
+  "upstream": {
+    "timeout_seconds": 600,
+    "header_timeout_seconds": 120,
+    "passthrough_ip": false,
+    "proxy": "",
+    "vpc_endpoint": "",
+    "queue_wait_mode": true,
+    "queue_max_retries": 4,
+    "queue_wait_cap_seconds": 30,
+    "queue_wait_default_seconds": 5,
+    "queue_wait_first_token": true,
+    "queue_budget_seconds": 120
+  },
+  "prompt": {
+    "mode": "passthrough",
+    "file": ""
+  },
+  "upstash": {
+    "url": "",
+    "token": ""
+  },
+  "model_aliases": {
+    "gpt-4o": "smodel",
+    "claude-sonnet": "smodel",
+    "claude-3-7-sonnet": "smodel",
+    "deepseek-chat": "cn:glm-5.2"
+  },
+  "free_models": [
+    "auto-free",
+    "q35fmodel",
+    "g3flmodel",
+    "q3fmodel"
+  ],
+  "alert": {
+    "enabled": false,
+    "webhooks": [],
+    "events": [],
+    "min_credit": 100
+  },
+  "pool": {
+    "max_in_flight": 3,
+    "max_in_flight_global": 2,
+    "breaker_threshold": 3,
+    "breaker_cooldown": "30m",
+    "breaker_cooldown_max": "6h",
+    "degrade_threshold": 5,
+    "degrade_cooldown": "10m",
+    "degrade_cooldown_max": "2h",
+    "idle_weight_per_hour": 0.5,
+    "idle_weight_max": 5.0,
+    "expiring_soon": "168h",
+    "cost_explore_interval": "30m",
+    "max_rotate": 8
+  },
+  "session_sticky": {
+    "enabled": true,
+    "ttl": "30m",
+    "gc_interval": "5m"
+  }
+}

@@ -1,0 +1,34 @@
+services:
+  qd2api:
+    image: qoder2api:latest
+    build: .
+    container_name: qoder2api
+    restart: unless-stopped
+    init: true
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "7865:7865"
+    volumes:
+      - ./auths:/app/auths
+      - ./data:/app/data
+      - ./config.json:/app/config.json:ro
+
+  # DeepSeek Harness (dsh) embedded Web/Terminal Agent companion
+  dsh:
+    image: smanx/deepseek-harness:latest
+    container_name: qoder2api-dsh
+    restart: unless-stopped
+    ports:
+      - "3080:3080"
+    environment:
+      - TZ=Asia/Shanghai
+      - DSH_PORT=3079
+      - PROXY_PORT=3080
+      - QODER_API_KEY=sk-qoder2api
+      - OPENAI_API_KEY=sk-qoder2api
+      - OPENAI_BASE_URL=http://qd2api:7865/v1
+    volumes:
+      - ./data/dsh:/root/.dsh
+    depends_on:
+      - qd2api

@@ -1,0 +1,47 @@
+# DeepSeek Harness (DSH) preset web profile patch for qoder2api gateway
+
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      qoder2api:
+        displayName: qoder2api
+        apiKeyEnv: QODER_API_KEY
+        api: openai-completions
+        baseURL: http://qd2api:7865/v1
+        models:
+          - id: auto-free
+            name: Auto Free (Smart Pool)
+            contextWindow: 200000
+            maxTokens: 32000
+          - id: global:smodel
+            name: Sonus (Global)
+            contextWindow: 1000000
+            maxTokens: 64000
+          - id: global:cmodel
+            name: CModel (Global)
+            contextWindow: 200000
+            maxTokens: 64000
+          - id: cn:q35model
+            name: Qoder 3.5 (CN)
+            contextWindow: 256000
+            maxTokens: 32000
+          - id: cn:glm-5.2
+            name: GLM-5.2 (CN)
+            contextWindow: 200000
+            maxTokens: 32000
+          - id: dsh
+            name: DeepSeek Harness (dsh Agent)
+            contextWindow: 131072
+            maxTokens: 8192
+
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: qoder2api
+    model: global:smodel

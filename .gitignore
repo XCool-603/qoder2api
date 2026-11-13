@@ -1,0 +1,30 @@
+# Binaries & builds
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+qoder2api
+qoder2api-*
+dist/
+build/
+
+# Sensitive credentials & runtime state
+auths/
+data/
+config.json
+*.log
+*.env
+.env.*
+
+# IDE & OS files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Research & temp
+.research/
+scratch/
