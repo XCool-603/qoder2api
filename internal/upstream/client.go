@@ -253,7 +253,7 @@ func (c *Client) handleRetryableError(
 		if wait > queueCap {
 			wait = queueCap
 		}
-		canRetryRound := waitFirstToken || *queueRounds < maxQueueRetries
+		canRetryRound := *queueRounds < maxQueueRetries
 		if canRetryRound && time.Since(queueStart)+wait <= queueBudget {
 			*queueRounds++
 			if onQueueWait != nil {

@@ -4012,7 +4012,15 @@ window.cachedAccounts = data.accounts || [];
       }
     });
 
+    let currentChatAbort = null;
+
     async function sendChatMessage() {
+      if (currentChatAbort) {
+        currentChatAbort.abort();
+        currentChatAbort = null;
+        return;
+      }
+
       const model = document.getElementById('chatModel').value;
       const apiKey = document.getElementById('chatApiKey').value;
       const prompt = document.getElementById('chatPrompt').value.trim();
@@ -4025,10 +4033,12 @@ window.cachedAccounts = data.accounts || [];
         return;
       }
 
-      btn.disabled = true;
-      btn.innerText = '流式生成中...';
+      currentChatAbort = new AbortController();
+      btn.disabled = false;
+      btn.classList.add('bg-rose-600', 'hover:bg-rose-500');
+      btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>中断请求</span>`;
       box.classList.remove('hidden');
-      box.innerText = '';
+      box.innerText = '正在建立全链路网关连接...';
       timing.classList.remove('hidden');
       timing.innerText = '耗时: 计时中...';
       const start = Date.now();
@@ -4056,6 +4066,11 @@ window.cachedAccounts = data.accounts || [];
         userContent = prompt;
       }
 
+      let hasError = false;
+      let hasFirstToken = false;
+      let fullText = '';
+      let lastUsage = null;
+
       try {
         const res = await fetch('/v1/chat/completions', {
           method: 'POST',
@@ -4067,20 +4082,20 @@ window.cachedAccounts = data.accounts || [];
             model: model,
             stream: true,
             messages: [{ role: 'user', content: userContent }]
-          })
+          }),
+          signal: currentChatAbort.signal
         });
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          box.innerText = '请求失败 [' + res.status + ']: ' + (errData.error ? JSON.stringify(errData.error) : res.statusText);
+          const hint = errData.error && errData.error.gateway_hint ? `\n💡 排查建议: ${errData.error.gateway_hint}` : '';
+          box.innerText = '请求失败 [' + res.status + ']: ' + (errData.error ? JSON.stringify(errData.error) : res.statusText) + hint;
           return;
         }
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder('utf-8');
-        let fullText = '';
         let buffer = '';
-        let lastUsage = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -4091,13 +4106,45 @@ window.cachedAccounts = data.accounts || [];
 
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            if (!trimmed) continue;
+
+            // 1. 拦截 SSE 保持心跳与上游排队注释 (形如: ": ping (queued round=1 count=0 wait=30s)")
+            if (trimmed.startsWith(':')) {
+              if (trimmed.includes('queued')) {
+                const match = trimmed.match(/round=(\d+).*?count=(\d+).*?wait=(\d+)s/);
+                const round = match ? match[1] : '1';
+                const count = match ? match[2] : '0';
+                const wait = match ? match[3] : '30';
+                if (!fullText) {
+                  box.innerText = `⏳ 上游云端模型资源调度繁忙，正在排队中 (第 ${round} 轮 / 预计等待 ${wait}s / 当前队列: ${count})...\n💡 网关长连接自动重试中，请稍候；如遇高峰期急用可尝试切换至其他模型。`;
+                }
+                timing.innerText = `耗时: ${((Date.now() - start) / 1000).toFixed(1)}s (上游排队第 ${round} 轮)`;
+              }
+              continue;
+            }
+
+            if (!trimmed.startsWith('data: ')) continue;
             const payload = trimmed.substring(6).trim();
             if (payload === '[DONE]') break;
             try {
               const chunk = JSON.parse(payload);
+              // 2. 检测并展示流式传输中的错误帧
+              if (chunk.error) {
+                hasError = true;
+                const hint = chunk.error.gateway_hint ? `\n\n💡 建议: ${chunk.error.gateway_hint}` : '';
+                const msg = chunk.error.message || JSON.stringify(chunk.error);
+                const codeStr = chunk.error.code ? ` [Code: ${chunk.error.code}]` : '';
+                box.innerText = `⚠️ 上游调用提示${codeStr}:\n${msg}${hint}`;
+                break;
+              }
+
+              // 3. 正常文本增量渲染
               const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content;
               if (delta) {
+                if (!hasFirstToken) {
+                  hasFirstToken = true;
+                  box.innerText = '';
+                }
                 fullText += delta;
                 box.innerText = fullText;
                 box.scrollTop = box.scrollHeight;
@@ -4110,12 +4157,20 @@ window.cachedAccounts = data.accounts || [];
             }
           }
         }
-        if (!fullText) {
-          box.innerText = '(已收到完成响应，但内容为空)';
+        if (!fullText && !hasError) {
+          box.innerText = '(已收到完成响应，但未接收到有效文本帧，可能由于上游资源调度繁忙，请稍后重试或切换模型)';
         }
       } catch (err) {
-        box.innerText = '网络连接或响应异常: ' + err;
+        if (err.name === 'AbortError') {
+          if (!fullText) box.innerText = '(已主动中断测试请求)';
+        } else {
+          box.innerText = '网络连接或响应异常: ' + err;
+        }
       } finally {
+        currentChatAbort = null;
+        btn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg><span>发送测试</span>`;
         const elapsed = ((Date.now() - start) / 1000).toFixed(2);
         let timingMsg = '耗时: ' + elapsed + 's';
         if (lastUsage) {
@@ -4128,8 +4183,6 @@ window.cachedAccounts = data.accounts || [];
           }
         }
         timing.innerText = timingMsg;
-        btn.disabled = false;
-        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg><span>发送测试</span>`;
         // 对话完成后自动刷新一次请求流水
         setTimeout(refreshData, 500);
       }

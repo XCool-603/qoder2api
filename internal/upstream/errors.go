@@ -80,7 +80,7 @@ const (
 	DefaultQueueMaxRetries    = 2
 	DefaultQueueWaitCapSec    = 30
 	DefaultQueueWaitDefSec    = 15
-	DefaultQueueWaitBudgetSec = 1800
+	DefaultQueueWaitBudgetSec = 120
 	maxQueueRetriesCeiling    = 10
 	maxQueueWaitCeilingSec    = 300
 	maxQueueBudgetCeilingSec  = 86400
@@ -532,7 +532,7 @@ func GatewayHint(kind ErrKind, msg string, ctx HintContext) string {
 	}
 	switch kind {
 	case ErrQueueWait:
-		return "upstream model queue busy (10605 / RESOURCE_LIMIT); retry shortly or switch models"
+		return "上游模型排队繁忙 (10605 / RESOURCE_LIMIT): 当前处于高峰期排队调度中，请稍后重试或切换其他轻量模型"
 	case ErrPromptTooLong:
 		return "request context exceeds the model's limit; reduce history/message size"
 	case ErrImageInvalid:
