@@ -1,6 +1,6 @@
 services:
   qd2api:
-    image: qoder2api:latest
+    image: ghcr.io/xcool-603/qoder2api:latest
     build: .
     container_name: qoder2api
     restart: unless-stopped

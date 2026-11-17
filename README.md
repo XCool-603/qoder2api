@@ -72,8 +72,22 @@
 
 ---
 
-### 方式 B：Docker Compose 一键部署
+### 方式 B：Docker 一键部署
 
+#### 1. Docker Run 单容器极速运行（推荐）
+直接拉取由 GitHub Actions 官方自动化构建的多架构镜像（AMD64 / ARM64），免去本地编译与配置：
+```bash
+docker run -d \
+  --name qoder2api \
+  --restart unless-stopped \
+  -p 7865:7865 \
+  -v $(pwd)/auths:/app/auths \
+  -v $(pwd)/data:/app/data \
+  -e TZ=Asia/Shanghai \
+  ghcr.io/xcool-603/qoder2api:latest
+```
+
+#### 2. Docker Compose 编排部署
 ```bash
 git clone https://github.com/XCool-603/qoder2api.git
 cd qoder2api
@@ -81,20 +95,30 @@ cp config.example.json config.json
 docker compose up -d
 ```
 
-- **网关端口**：`7865` (`http://127.0.0.1:7865`)
-- **控制台地址**：`http://127.0.0.1:7865/console`
+- **网关前台门户**：`http://<服务器IP>:7865`
+- **管理控制台**：`http://<服务器IP>:7865/console`
 - **默认 API Key**：`sk-qoder2api`
-- **持久化目录**：`./auths`（凭据）、`./data`（状态与配置）
+- **持久化目录**：`./auths`（凭证存储）、`./data`（系统状态与 RBAC 数据库）
+
+> [!NOTE]
+> **关于端口与 New-API 的说明**：
+> - Qoder 2API 是纯 Go 编写的**独立专用网关**，**默认运行在 `7865` 端口**（后台控制台为 `/console`），与 New-API / One-API 无任何代码关联，更不会混淆。
+> - 若服务器上同时部署了 New-API（默认端口 `3000`），请务必在浏览器访问时显式附带 `:7865` 端口（如 `http://IP:7865/console`），避免因反向代理或默认端口路由到了原有的 New-API 容器。
+> - 若需将 Qoder 2API 接入 New-API 作为上游渠道，只需在 New-API 添加自定义渠道：Base URL 填 `http://<Qoder2API宿主机IP>:7865`，密钥填 `sk-qoder2api` 即可。
 
 常用维护命令：
 ```bash
-# 查看实时日志
-docker compose logs -f qoder2api
+# 查看实时运行日志
+docker logs -f qoder2api
+# 或
+docker compose logs -f qd2api
 
 # 服务健康检查
 curl -s http://127.0.0.1:7865/healthz
 
-# 重启或停止服务
+# 重启或停止容器
+docker restart qoder2api
+# 或
 docker compose restart
 docker compose down
 ```
