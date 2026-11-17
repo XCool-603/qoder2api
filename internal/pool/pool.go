@@ -317,6 +317,22 @@ func (p *Pool) Add(a *auth.Auth) {
 	p.upsertLocked(a)
 }
 
+// AllAuths 返回池中所有当前有效的账号凭证实例（快照副本切片）。
+func (p *Pool) AllAuths() []*auth.Auth {
+	if p == nil {
+		return nil
+	}
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	res := make([]*auth.Auth, 0, len(p.byUID))
+	for _, e := range p.byUID {
+		if e != nil && e.a != nil {
+			res = append(res, e.a)
+		}
+	}
+	return res
+}
+
 // Remove 从池中剔除指定 UID 的账号并持久化。
 func (p *Pool) Remove(uid string) {
 	p.mu.Lock()

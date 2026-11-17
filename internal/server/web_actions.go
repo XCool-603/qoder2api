@@ -7,13 +7,13 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"qoder2api/internal/auth"
 	"qoder2api/internal/cosy"
 	"qoder2api/internal/upstream"
+	"qoder2api/internal/usermgr"
 )
 
 func truncateStr(s string, maxLen int) string {
@@ -176,6 +176,47 @@ func (h *Handler) handleActionDelete(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "removed": true})
 }
 
+// getAvailableAuths 统一聚合内存账号池与本地 authDir 凭据文件，确保新授权账号立即可用。
+func (h *Handler) getAvailableAuths(user *usermgr.User) []*auth.Auth {
+	var result []*auth.Auth
+	seenUID := make(map[string]bool)
+
+	// 1. 优先从内存账号池中提取（热更新或刚授权的账号立即可用）
+	if h != nil && h.cfg.Pool != nil {
+		for _, a := range h.cfg.Pool.AllAuths() {
+			if a != nil && a.UID != "" && !seenUID[a.UID] {
+				if h.isAccountVisibleTo(a, user) {
+					result = append(result, a)
+					seenUID[a.UID] = true
+				}
+			}
+		}
+	}
+
+	// 2. 从本地 authDir 凭据目录中查漏补缺
+	authDir := h.getAuthDir()
+	files, _ := auth.LoadAuthFiles(authDir)
+	for _, f := range files {
+		raw, err := os.ReadFile(f)
+		if err != nil {
+			continue
+		}
+		a, err := auth.Parse(raw)
+		if err != nil || a == nil {
+			continue
+		}
+		a.FilePath = f
+		if a.UID != "" && seenUID[a.UID] {
+			continue
+		}
+		if h.isAccountVisibleTo(a, user) {
+			result = append(result, a)
+			seenUID[a.UID] = true
+		}
+	}
+	return result
+}
+
 // handleActionSignin triggers Qoder campaign daily check-in either for one uid or the entire pool.
 func (h *Handler) handleActionSignin(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))
@@ -224,29 +265,25 @@ func (h *Handler) handleActionSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Batch checkin for all accounts
-	authDir := h.getAuthDir()
-	files, _ := auth.LoadAuthFiles(authDir)
+	auths := h.getAvailableAuths(user)
+	if len(auths) == 0 {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"ok":      false,
+			"success": false,
+			"output":  "未找到任何账号凭证文件 (" + h.getAuthDir() + " 目录为空且账号池无就绪账号)",
+		})
+		return
+	}
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%-36s | %-12s | %-10s | %-6s | %s\n", "UID", "昵称", "签到状态", "余额", "详情"))
 	sb.WriteString("-------------------------------------+--------------+------------+--------+--------------------\n")
 
 	okN, alreadyN, failN, skipN := 0, 0, 0, 0
-	for _, f := range files {
-		raw, err := os.ReadFile(f)
-		if err != nil {
-			sb.WriteString(fmt.Sprintf("%-36s | %-12s | %-10s | %-6s | %s\n", filepath.Base(f), "-", "LOAD_ERR", "-", err.Error()))
-			failN++
+	for _, a := range auths {
+		if a == nil {
 			continue
 		}
-		a, err := auth.Parse(raw)
-		if err != nil {
-			sb.WriteString(fmt.Sprintf("%-36s | %-12s | %-10s | %-6s | %s\n", filepath.Base(f), "-", "PARSE_ERR", "-", err.Error()))
-			failN++
-			continue
-		}
-		a.FilePath = f
-
 		if !h.isAccountVisibleTo(a, user) {
 			continue
 		}
@@ -286,8 +323,8 @@ func (h *Handler) handleActionSignin(w http.ResponseWriter, r *http.Request) {
 			truncateStr(a.UID, 36), truncateStr(nick, 12), status, creditsStr, truncateStr(detail, 30)))
 	}
 
-	h.cfg.Pool.SetCheckinRunSummary("manual", len(files), okN, alreadyN, failN, skipN)
-	sb.WriteString(fmt.Sprintf("\n总计: %d | 成功: %d | 已签: %d | 失败: %d\n", len(files), okN, alreadyN, failN))
+	h.cfg.Pool.SetCheckinRunSummary("manual", len(auths), okN, alreadyN, failN, skipN)
+	sb.WriteString(fmt.Sprintf("\n总计: %d | 成功: %d | 已签: %d | 失败: %d\n", len(auths), okN, alreadyN, failN))
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":      true,
@@ -303,34 +340,25 @@ func (h *Handler) handleActionTrial(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	authDir := h.getAuthDir()
-	files, err := auth.LoadAuthFiles(authDir)
-	if err != nil || len(files) == 0 {
+	user := h.getWebSessionUser(r)
+	auths := h.getAvailableAuths(user)
+	if len(auths) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": false,
-			"output":  "未找到任何账号凭证文件 (" + authDir + " 目录为空)",
+			"output":  "未找到任何账号凭证文件 (" + h.getAuthDir() + " 目录为空且账号池无就绪账号)",
 		})
 		return
 	}
-
-	user := h.getWebSessionUser(r)
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%-36s | %-12s | %-10s | %s\n", "UID", "昵称", "领取状态", "详情"))
 	sb.WriteString("-------------------------------------+--------------+------------+--------------------\n")
 
 	okN, alreadyN, naN, failN := 0, 0, 0, 0
-	for _, f := range files {
-		raw, err := os.ReadFile(f)
-		if err != nil {
+	for _, a := range auths {
+		if a == nil {
 			continue
 		}
-		a, err := auth.Parse(raw)
-		if err != nil {
-			continue
-		}
-		a.FilePath = f
-
 		if !h.isAccountVisibleTo(a, user) {
 			continue
 		}
@@ -365,7 +393,7 @@ func (h *Handler) handleActionTrial(w http.ResponseWriter, r *http.Request) {
 			truncateStr(a.UID, 36), truncateStr(nick, 12), status, truncateStr(detail, 30)))
 	}
 
-	sb.WriteString(fmt.Sprintf("\n总计: %d | 成功: %d | 已领/不符: %d | 失败: %d\n", len(files), okN, alreadyN+naN, failN))
+	sb.WriteString(fmt.Sprintf("\n总计: %d | 成功: %d | 已领/不符: %d | 失败: %d\n", len(auths), okN, alreadyN+naN, failN))
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -381,17 +409,15 @@ func (h *Handler) handleActionWelfare(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	authDir := h.getAuthDir()
-	files, err := auth.LoadAuthFiles(authDir)
-	if err != nil || len(files) == 0 {
+	user := h.getWebSessionUser(r)
+	auths := h.getAvailableAuths(user)
+	if len(auths) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": false,
-			"output":  "未找到任何账号凭证文件 (" + authDir + " 目录为空)",
+			"output":  "未找到任何账号凭证文件 (" + h.getAuthDir() + " 目录为空且账号池无就绪账号)",
 		})
 		return
 	}
-
-	user := h.getWebSessionUser(r)
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%-28s | %-10s | %-8s | %-8s | %-8s | %-8s | %-8s\n", "UID", "新手礼包", "补偿", "签到", "试用", "本次到账", "最新余额"))
@@ -414,17 +440,10 @@ func (h *Handler) handleActionWelfare(w http.ResponseWriter, r *http.Request) {
 	var results []WelfareRow
 	var totalNewCredits int64
 
-	for _, f := range files {
-		raw, err := os.ReadFile(f)
-		if err != nil {
+	for _, a := range auths {
+		if a == nil {
 			continue
 		}
-		a, err := auth.Parse(raw)
-		if err != nil {
-			continue
-		}
-		a.FilePath = f
-
 		if !h.isAccountVisibleTo(a, user) {
 			continue
 		}
@@ -510,17 +529,15 @@ func (h *Handler) handleActionTravel(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	authDir := h.getAuthDir()
-	files, err := auth.LoadAuthFiles(authDir)
-	if err != nil || len(files) == 0 {
+	user := h.getWebSessionUser(r)
+	auths := h.getAvailableAuths(user)
+	if len(auths) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": false,
-			"output":  "未找到任何账号凭证文件 (" + authDir + " 目录为空)",
+			"output":  "未找到任何账号凭证文件 (" + h.getAuthDir() + " 目录为空且账号池无就绪账号)",
 		})
 		return
 	}
-
-	user := h.getWebSessionUser(r)
 
 	var sb strings.Builder
 	sb.WriteString("=== Qoder 账号池巡检与实时余额同步报告 ===\n")
@@ -528,17 +545,10 @@ func (h *Handler) handleActionTravel(w http.ResponseWriter, r *http.Request) {
 	sb.WriteString("-------------------------------------+--------------+------------+----------+--------------------\n")
 
 	okN, failN := 0, 0
-	for _, f := range files {
-		raw, err := os.ReadFile(f)
-		if err != nil {
+	for _, a := range auths {
+		if a == nil {
 			continue
 		}
-		a, err := auth.Parse(raw)
-		if err != nil {
-			continue
-		}
-		a.FilePath = f
-
 		if !h.isAccountVisibleTo(a, user) {
 			continue
 		}
@@ -581,17 +591,15 @@ func (h *Handler) handleActionTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	authDir := h.getAuthDir()
-	files, err := auth.LoadAuthFiles(authDir)
-	if err != nil || len(files) == 0 {
+	user := h.getWebSessionUser(r)
+	auths := h.getAvailableAuths(user)
+	if len(auths) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": false,
-			"output":  "未找到任何账号凭证文件 (" + authDir + " 目录为空)",
+			"output":  "未找到任何账号凭证文件 (" + h.getAuthDir() + " 目录为空且账号池无就绪账号)",
 		})
 		return
 	}
-
-	user := h.getWebSessionUser(r)
 
 	var sb strings.Builder
 	sb.WriteString("=== Qoder 成长任务与多重活动权益执行报告 ===\n")
@@ -599,17 +607,10 @@ func (h *Handler) handleActionTasks(w http.ResponseWriter, r *http.Request) {
 	sb.WriteString("-------------------------------------+--------------+------------+-----------\n")
 
 	var totalNew int64
-	for _, f := range files {
-		raw, err := os.ReadFile(f)
-		if err != nil {
+	for _, a := range auths {
+		if a == nil {
 			continue
 		}
-		a, err := auth.Parse(raw)
-		if err != nil {
-			continue
-		}
-		a.FilePath = f
-
 		if !h.isAccountVisibleTo(a, user) {
 			continue
 		}

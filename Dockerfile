@@ -41,7 +41,5 @@ EXPOSE 7865
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s \
   CMD wget -qO- http://127.0.0.1:7865/ui/public/status || exit 1
 
-USER app
-
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["-headless", "-config", "/app/config.json"]

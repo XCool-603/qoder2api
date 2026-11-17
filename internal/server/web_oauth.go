@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -185,10 +186,14 @@ func (h *Handler) saveNewAuthAccount(acct *auth.Auth) {
 		return
 	}
 	dir := h.getAuthDir()
+	_ = os.MkdirAll(dir, 0o755)
 	fp := resolveAuthFilePath(dir, acct.Realm(), acct.UID, acct.ProviderValue(), acct.AccessTokenValue(), acct.RefreshTokenValue())
 	acct.FilePath = fp
 	acct.BackfillRealm()
-	_ = acct.SaveAtomic()
+	if err := acct.SaveAtomic(); err != nil {
+		// Log atomic save failure for easy diagnosis of docker/host mount permission issues
+		println("[auth] ERROR: SaveAtomic failed:", fp, err.Error())
+	}
 	if h.cfg.Pool != nil {
 		h.cfg.Pool.Add(acct)
 	}
